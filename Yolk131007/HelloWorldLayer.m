@@ -1,8 +1,8 @@
 //
 //  HelloWorldLayer.m
-//  Yolk131007
+//  Yolk131003
 //
-//  Created by Sangwon Kim on 13. 10. 7..
+//  Created by Sangwon Kim on 13. 10. 3..
 //  Copyright Butfollow 2013년. All rights reserved.
 //
 
@@ -37,71 +37,50 @@
 // on "init" you need to initialize your instance
 -(id) init
 {
+    //전역변수 불러오기
+    AppController *thisapp = [[UIApplication sharedApplication] delegate];
+    
 	// always call "super" init
 	// Apple recommends to re-assign "self" with the "super's" return value
-	if( (self=[super init]) ) {
-		
-		// create and initialize a Label
-		CCLabelTTF *label = [CCLabelTTF labelWithString:@"Hello World" fontName:@"Marker Felt" fontSize:64];
+	if(self=[super initWithColor:ccc4(255, 255, 255, 255)]) {
+        
+        self.touchEnabled = YES;
+        
 
-		// ask director for the window size
-		CGSize size = [[CCDirector sharedDirector] winSize];
-	
-		// position the label on the center of the screen
-		label.position =  ccp( size.width /2 , size.height/2 );
-		
-		// add the label as a child to this Layer
-		[self addChild: label];
-		
-		
-		
-		//
-		// Leaderboards and Achievements
-		//
-		
-		// Default font size will be 28 points.
-		[CCMenuItemFont setFontSize:28];
-		
-		// to avoid a retain-cycle with the menuitem and blocks
-		__block id copy_self = self;
-		
-		// Achievement Menu Item using blocks
-		CCMenuItem *itemAchievement = [CCMenuItemFont itemWithString:@"Achievements" block:^(id sender) {
-			
-			
-			GKAchievementViewController *achivementViewController = [[GKAchievementViewController alloc] init];
-			achivementViewController.achievementDelegate = copy_self;
-			
-			AppController *app = (AppController*) [[UIApplication sharedApplication] delegate];
-			
-			[[app navController] presentModalViewController:achivementViewController animated:YES];
-			
-			[achivementViewController release];
-		}];
-		
-		// Leaderboard Menu Item using blocks
-		CCMenuItem *itemLeaderboard = [CCMenuItemFont itemWithString:@"Leaderboard" block:^(id sender) {
-			
-			
-			GKLeaderboardViewController *leaderboardViewController = [[GKLeaderboardViewController alloc] init];
-			leaderboardViewController.leaderboardDelegate = copy_self;
-			
-			AppController *app = (AppController*) [[UIApplication sharedApplication] delegate];
-			
-			[[app navController] presentModalViewController:leaderboardViewController animated:YES];
-			
-			[leaderboardViewController release];
-		}];
-
-		
-		CCMenu *menu = [CCMenu menuWithItems:itemAchievement, itemLeaderboard, nil];
-		
-		[menu alignItemsHorizontallyWithPadding:20];
-		[menu setPosition:ccp( size.width/2, size.height/2 - 50)];
-		
-		// Add the menu to the layer
-		[self addChild:menu];
-
+        //현재 소유 노른자 수 라벨
+        _havingYolk_lab = [CCLabelTTF labelWithString:[NSString stringWithFormat:@"%1.0f", thisapp.havingYolk] fontName:@"Arial" fontSize:32];
+        [_havingYolk_lab setPosition:CGPointMake(160, 500)];
+        [_havingYolk_lab setColor:ccBLACK];
+        [self addChild:_havingYolk_lab];
+        
+        //현재 소유 노른자 수 갱신
+        NSTimer *perSec = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(renewLabel) userInfo:nil repeats:true];
+        
+        //초당 노른자 수 라벨
+        _yolkPerSec_lab = [CCLabelTTF labelWithString:[NSString stringWithFormat:@"%1.1f", thisapp.yolkPerSec] fontName:@"Arial" fontSize:32];
+        [_yolkPerSec_lab setPosition:CGPointMake(160, 450)];
+        [_yolkPerSec_lab setColor:ccBLACK];
+        [self addChild:_yolkPerSec_lab];
+        
+        //노른자 스프라이트
+        _yolk = [CCSprite spriteWithFile:@"yolk.png"];
+        [_yolk setPosition:CGPointMake(160, 284)];
+        [self addChild:_yolk];
+        
+        
+        //--메뉴--//
+        //장비 씬 가기
+        _inventory = [CCMenuItemFont itemWithString:@"Inventory" target:self selector:@selector(goToInventory:)];
+        [_inventory setColor:ccBLACK];
+        
+        //정보 씬 가기
+        _stat = [CCMenuItemFont itemWithString:@"Stat" target:self selector:@selector(goToStat:)];
+        [_stat setColor:ccBLACK];
+        
+        _menu = [CCMenu menuWithItems:_inventory, _stat, nil];
+        [_menu alignItemsHorizontally];
+        [_menu setPosition:CGPointMake(160, 50)];
+        [self addChild:_menu];
 	}
 	return self;
 }
@@ -114,7 +93,60 @@
 	// cocos2d will automatically release all the children (Label)
 	
 	// don't forget to call "super dealloc"
-	[super dealloc];
+	//[super dealloc];
+}
+
+//노른자 수 라벨 갱신
+-(void)renewLabel
+{
+    //전역변수 불러오기
+    AppController *thisapp = [[UIApplication sharedApplication] delegate];
+    
+    [_havingYolk_lab setString:[NSString stringWithFormat:@"%1.0f", thisapp.havingYolk]]; //현재 소유 노른자 수 라벨 갱신
+}
+
+//스프라이트 내부 값 터치 여부
+- (BOOL)isHitWithTarget:(CCSprite *)target touchPoint:(CGPoint)touchPoint {
+    
+    // target과 touchPoint 간의 거리가 (target의 크기/2) 이면 터치한 것으로 판단하여 YES 값을 반환합니다.
+    if(ccpDistance(target.position, touchPoint) < target.contentSize.width /2) return YES;
+    
+    // 그렇지 않다면 NO 값을 반환합니다.
+    return NO;
+}
+
+//터치 이벤트
+-(void) ccTouchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    //전역변수 불러오기
+    AppController *thisapp = [[UIApplication sharedApplication] delegate];
+    
+    UITouch *touch = [touches anyObject];
+    CGPoint point = [self convertTouchToNodeSpace:touch];
+    
+    //노른자 스프라이트 터치
+    if ([self isHitWithTarget:_yolk touchPoint:point])
+    {
+        thisapp.havingYolk += 1; //현재 소유 노른자 수 1증가
+        [_havingYolk_lab setString:[NSString stringWithFormat:@"%1.0f", thisapp.havingYolk]]; //현재 소유 노른자 수 라벨 갱신
+    }
+    
+}
+
+//---메뉴 이동 함수---//
+//인벤토리 이동
+-(void)goToInventory: (CCMenuItem  *) menuItem
+{
+    CCDirector *director;
+    director = [CCDirector sharedDirector];
+    [director replaceScene:[CCTransitionFade transitionWithDuration:1.0 scene:[InventoryLayer scene]]];
+}
+//정보 이동
+-(void)goToStat: (CCMenuItem  *) menuItem
+{
+    CCDirector *director;
+    director = [CCDirector sharedDirector];
+    [director replaceScene:[CCTransitionFade transitionWithDuration:1.0 scene:[StatLayer scene]]];
 }
 
 #pragma mark GameKit delegate

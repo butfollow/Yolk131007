@@ -1,8 +1,8 @@
 //
 //  IntroLayer.h
-//  Yolk131007
+//  Yolk131003
 //
-//  Created by Sangwon Kim on 13. 10. 7..
+//  Created by Sangwon Kim on 13. 10. 3..
 //  Copyright Butfollow 2013년. All rights reserved.
 //
 

@@ -1,8 +1,8 @@
 //
 //  AppDelegate.m
-//  Yolk131007
+//  Yolk131003
 //
-//  Created by Sangwon Kim on 13. 10. 7..
+//  Created by Sangwon Kim on 13. 10. 3..
 //  Copyright Butfollow 2013년. All rights reserved.
 //
 
@@ -20,7 +20,7 @@
 	
 	// iPhone only
 	if( [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone )
-		return UIInterfaceOrientationMaskLandscape;
+		return UIInterfaceOrientationMaskPortrait;
 	
 	// iPad only
 	return UIInterfaceOrientationMaskLandscape;
@@ -32,11 +32,11 @@
 {
 	// iPhone only
 	if( [[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone )
-		return UIInterfaceOrientationIsLandscape(interfaceOrientation);
+		return UIInterfaceOrientationIsPortrait(interfaceOrientation);
 	
 	// iPad only
 	// iPhone only
-	return UIInterfaceOrientationIsLandscape(interfaceOrientation);
+	return UIInterfaceOrientationIsPortrait(interfaceOrientation);
 }
 
 // This is needed for iOS4 and iOS5 in order to ensure
@@ -59,6 +59,18 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    //현재 소유 노른자 수 초기화
+    _havingYolk = 0;
+    
+    //초당 노른자 수 초기화
+    _yolkPerSec = 0.1;
+    
+    //터치당 획득 노른자 수 초기화
+    _yolkPerTouch = 1;
+    
+    //초당 노른자 증가하기
+    NSTimer *perSec = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(makeYolkPerSec) userInfo:nil repeats:true];
+    
 	// Create the main window
 	window_ = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 	
@@ -186,9 +198,15 @@
 
 - (void) dealloc
 {
-	[window_ release];
-	[navController_ release];
+	//[window_ release];
+	//[navController_ release];
 	
-	[super dealloc];
+	//[super dealloc];
+}
+
+//-------//
+-(void)makeYolkPerSec
+{
+    _havingYolk += _yolkPerSec;
 }
 @end
